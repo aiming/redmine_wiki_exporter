@@ -15,10 +15,10 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name = "redmine_wiki_exporter"
-  gem.homepage = "http://github.com/tosik/redmine_wiki_exporter"
+  gem.homepage = "http://github.com/aiming/redmine_wiki_exporter"
   gem.license = "MIT"
-  gem.summary = %Q{TODO: one-line summary of your gem}
-  gem.description = %Q{TODO: longer description of your gem}
+  gem.summary = %Q{redmine wiki exporter}
+  gem.description = %Q{redmine wiki exporter}
   gem.email = "toshi.hirooka@gmail.com"
   gem.authors = ["Toshiyuki Hirooka"]
   # dependencies defined in Gemfile
