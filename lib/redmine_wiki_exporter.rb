@@ -19,6 +19,10 @@ class RedmineWikiExporter
     @root_url
   end
 
+  def project
+    @project
+  end
+
   def agent
     @agent
   end
@@ -34,8 +38,9 @@ class RedmineWikiExporter
     agent.page.uri.to_s.split('/').last
   end
 
-  def initialize(root)
+  def initialize(root, project)
     @root_url = root
+    @project = project
     @agent = Mechanize.new
   end
 
@@ -79,10 +84,27 @@ class RedmineWikiExporter
     Dir::mkdir("#{exporting_path}/images") rescue nil
   end
 
-  def scrape(url)
+  def save(wiki_name)
+    url = "#{root_url}/projects/#{project}/wiki/#{wiki_name}"
     agent.get(url)
     mkdirs
     save_page
     save_images
   end
+
+  def wiki_urls
+    return @wiki_urls if @wiki_urls
+    url = "#{root_url}/projects/#{project}/wiki/index"
+    agent.get(url)
+    agent.page.links.map {|link|
+      link.href
+    }
+  end
+
+  def scrape
+    wiki_urls.select {|url| url.to_s.include? "Spec_"}.each do |url|
+      save(url.split('/').last)
+    end
+  end
 end
+
