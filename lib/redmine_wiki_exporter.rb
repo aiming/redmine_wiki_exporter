@@ -101,10 +101,16 @@ class RedmineWikiExporter
     }
   end
 
+  def scraping_selector=(selector)
+    @scraping_selector = selector
+  end
+  def scraping_selector
+    @scraping_selector
+  end
+
   def scrape
-    wiki_urls.select {|url| url.to_s.include? "Spec_"}.each do |url|
+    wiki_urls.select(&scraping_selector).each do |url|
       save(url.split('/').last)
     end
   end
 end
-
