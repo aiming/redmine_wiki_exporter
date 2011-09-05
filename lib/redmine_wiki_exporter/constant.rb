@@ -8,7 +8,7 @@ module RedmineWikiExporterModule
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
 <head> 
 <meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
-<title>Filament - Spec 050-130 World Zone - Aiming Redmine</title> 
+<title>docs</title> 
 <link href="style.css" media="all" rel="stylesheet" type="text/css" /> 
 </head> 
 <body>
