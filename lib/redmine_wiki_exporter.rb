@@ -15,6 +15,24 @@ end
 OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
 class RedmineWikiExporter
+  class WikiURL
+    def url
+      @url
+    end
+
+    def initialize(url)
+      @url = url
+    end
+
+    def wikiname
+      url.to_s.split('/').last
+    end
+  end
+
+  def self.url_to_wikiname(url)
+    WikiURL.new(url).wikiname
+  end
+
   def root_url
     @root_url
   end
@@ -35,7 +53,7 @@ class RedmineWikiExporter
   end
 
   def page_name
-    agent.page.uri.to_s.split('/').last
+    self.url_to_wikiname(agent.page.uri)
   end
 
   def initialize(root, project)
@@ -59,7 +77,7 @@ class RedmineWikiExporter
   def save_images
     agent.page.images.map {|i| i.url}.select {|url| url.include? "/attachments/download/"}.each do |url|
       image = agent.get(url)
-      image.save("#{exporting_path}/images/#{url.split('/').last}.png")
+      image.save("#{exporting_path}/images/#{self.url_to_wikiname(url)}.png")
     end
   end
 
@@ -69,10 +87,10 @@ class RedmineWikiExporter
     doc = Hpricot(agent.page.body)
     wiki = (doc/"div.wiki")
     (wiki/:img).each do |img|
-      img[:src] = "images/#{img[:src].split('/').last}.png" if image_urls.include? img[:src]
+      img[:src] = "images/#{self.url_to_wikiname(img[:src])}.png" if image_urls.include? img[:src]
     end
     (wiki/:a).each do |link|
-      link[:href] = "#{link[:href].to_s.split('/').last}.html" if link[:href].to_s.include? "/wiki/"
+      link[:href] = "#{self.url_to_wikiname(link[:href])}.html" if link[:href].to_s.include? "/wiki/"
     end
     file = open("#{exporting_path}/#{page_name}.html", "w")
     file.write(header + wiki.inner_html + footer)
@@ -110,7 +128,7 @@ class RedmineWikiExporter
 
   def scrape
     wiki_urls.select(&scraping_selector).each do |url|
-      save(url.split('/').last)
+      save(self.url_to_wikiname(url))
     end
   end
 end
