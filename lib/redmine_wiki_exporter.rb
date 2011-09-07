@@ -29,7 +29,7 @@ class RedmineWikiExporter
     end
   end
 
-  def self.url_to_wikiname(url)
+  def url_to_wikiname(url)
     WikiURL.new(url).wikiname
   end
 
@@ -45,15 +45,34 @@ class RedmineWikiExporter
     @agent
   end
 
+  def homepage_wikiname
+    @homepage_wikiname
+  end
+  def homepage_wikiname=(wikiname)
+    @homepage_wikiname = wikiname
+  end
+
   def exporting_path
     @exporting_path
   end
   def exporting_path=(path)
-    @exporting_path = path
+    @exporting_path = "#{path}/"
+  end
+  def html_dir_name
+    "html"
+  end
+  def html_path
+    "#{exporting_path}#{html_dir_name}/"
+  end
+  def image_dir_name
+    "images"
+  end
+  def image_path
+    "#{html_path}#{image_dir_name}/"
   end
 
   def page_name
-    self.url_to_wikiname(agent.page.uri)
+    url_to_wikiname(agent.page.uri)
   end
 
   def initialize(root, project)
@@ -77,7 +96,7 @@ class RedmineWikiExporter
   def save_images
     agent.page.images.map {|i| i.url}.select {|url| url.include? "/attachments/download/"}.each do |url|
       image = agent.get(url)
-      image.save("#{exporting_path}/images/#{self.url_to_wikiname(url)}.png")
+      image.save("#{image_path}#{url_to_wikiname(url)}.png")
     end
   end
 
@@ -87,19 +106,33 @@ class RedmineWikiExporter
     doc = Hpricot(agent.page.body)
     wiki = (doc/"div.wiki")
     (wiki/:img).each do |img|
-      img[:src] = "images/#{self.url_to_wikiname(img[:src])}.png" if image_urls.include? img[:src]
+      img[:src] = "#{image_dir_name}/#{url_to_wikiname(img[:src])}.png" if image_urls.include? img[:src]
     end
     (wiki/:a).each do |link|
-      link[:href] = "#{self.url_to_wikiname(link[:href])}.html" if link[:href].to_s.include? "/wiki/"
+      link_wikiname = url_to_wikiname(link[:href])
+      if link_wikiname == homepage_wikiname
+        page_filename = "../#{link_wikiname}.html"
+      else
+        page_filename = "#{link_wikiname}.html"
+      end
+      page_filename = "#{html_dir_name}/#{link_wikiname}.html" if url_to_wikiname(agent.page.uri) == homepage_wikiname
+      link[:href] = "#{page_filename}" if link[:href].to_s.include? "/wiki/"
     end
-    file = open("#{exporting_path}/#{page_name}.html", "w")
+
+    if url_to_wikiname(agent.page.uri) == homepage_wikiname
+      filename = "#{exporting_path}#{page_name}.html"
+    else
+      filename = "#{html_path}#{page_name}.html"
+    end
+    file = open(filename, "w")
     file.write(header + wiki.inner_html + footer)
     file.close
   end
 
   def mkdirs
     Dir::mkdir("#{exporting_path}") rescue nil
-    Dir::mkdir("#{exporting_path}/images") rescue nil
+    Dir::mkdir("#{html_path}") rescue nil
+    Dir::mkdir("#{image_path}") rescue nil
   end
 
   def save(wiki_name)
@@ -128,7 +161,7 @@ class RedmineWikiExporter
 
   def scrape
     wiki_urls.select(&scraping_selector).each do |url|
-      save(self.url_to_wikiname(url))
+      save(url_to_wikiname(url))
     end
   end
 end
