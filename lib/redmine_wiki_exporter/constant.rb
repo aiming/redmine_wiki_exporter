@@ -12,11 +12,13 @@ module RedmineWikiExporterModule
 <link href="style.css" media="all" rel="stylesheet" type="text/css" /> 
 </head> 
 <body>
+<div class="wiki">
 EOS
     end
 
     def self.footer
       <<EOS
+</div>
 </body> 
 </html> 
 EOS
