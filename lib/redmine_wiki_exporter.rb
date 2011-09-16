@@ -106,17 +106,29 @@ class RedmineWikiExporter
     doc = Hpricot(agent.page.body)
     wiki = (doc/"div.wiki")
     (wiki/:img).each do |img|
-      img[:src] = "#{image_dir_name}/#{url_to_wikiname(img[:src])}.png" if image_urls.include? img[:src]
+      if img[:src].to_s.include? "http"
+        scanned = img[:src].to_s.scan(/.*\/attachments\/(.*)\/.*\.(.*)/).first
+        image_filename = "#{scanned[0]}.#{scanned[1]}"
+        img[:src] = "#{image_dir_name}/#{image_filename}"
+      else
+        img[:src] = "#{image_dir_name}/#{url_to_wikiname(img[:src])}.png" if image_urls.include? img[:src]
+      end
     end
     (wiki/:a).each do |link|
-      link_wikiname = url_to_wikiname(link[:href])
-      if link_wikiname == homepage_wikiname
-        page_filename = "../#{link_wikiname}.html"
-      else
-        page_filename = "#{link_wikiname}.html"
+      if link[:href].to_s.include? "/wiki/"
+        link_wikiname = url_to_wikiname(link[:href])
+        if link_wikiname == homepage_wikiname
+          page_filename = "../#{link_wikiname}.html"
+        else
+          page_filename = "#{link_wikiname}.html"
+        end
+        page_filename = "#{html_dir_name}/#{link_wikiname}.html" if url_to_wikiname(agent.page.uri) == homepage_wikiname
+        link[:href] = "#{page_filename}"
+      elsif link[:href].to_s.include? "/attachments/"
+        scanned = link[:href].to_s.scan(/.*\/attachments\/(.*)\/.*\.(.*)/).first
+        image_filename = "#{scanned[0]}.#{scanned[1]}"
+        link[:href] = "#{image_dir_name}/#{image_filename}"
       end
-      page_filename = "#{html_dir_name}/#{link_wikiname}.html" if url_to_wikiname(agent.page.uri) == homepage_wikiname
-      link[:href] = "#{page_filename}" if link[:href].to_s.include? "/wiki/"
     end
 
     if url_to_wikiname(agent.page.uri) == homepage_wikiname
